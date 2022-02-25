@@ -40,10 +40,48 @@
           </code>
         </h3>
         <div class="text-center" id="address"></div>
+        <div class="text-center" id="contractBalance"></div>
         <hr />
       </div>
     </div>
+    <div class="row text-center">
+      <div class="col-md-2 col-md-offset-5">
+        <hr />
+        <label>Send KLAY</label>
+        <div class="input-group">
+          <input type="number" class="form-control" id="amount" />
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button" onclick="App.deposit()">send</button>
+          </span>
+        </div>
+      </div>
+    </div>
   </div>
+  <br />
+
+  <div class="row text-center">
+    <div id="game" style="display: none">
+      <div class="yellow-box" id="start"><a href="#" onclick="app.generateNumbers()">start</a>
+      </div>
+      <div class="yellow-box" id="question"><span id="num1">+</span><span id="num2">= ?</span>
+        <div class="input-group">
+          <input type="number" class="form-control" id="answer" >
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default" onclick="App.submitAnswer()">submit</button>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="spin"></div>
+  <div class="row text-center">
+    <p id="timer"></p>
+  </div>
+  <div class="row text-center">
+    <div id="transaction"></div>
+  </div>
+
   <div class="modal fade" tabindex="-1" role="dialog" id="loginModal">
     <div class="modal-dialog modal-sm">
       <div class="modal-content">
