@@ -1,20 +1,54 @@
+import Caver from "caver-js"
+
+const config = {
+  rpcURL: 'https://api.baoba.klaytn.net:8651'
+}
+const cav = new Caver(config.rpcURL);
 
 const App = {
+
+  auth: {
+    accessType: 'keystore',
+    keystore: '',
+    password: ''
+  },
 
   start: async function () {
 
   },
 
   handleImport: async function () {
-
+    const fileReader = new FileReader();
+    fileReader.readAsText(event.target.files[0]);
+    fileReader.onload = (event) => {
+      try{
+        if (!this.checkValidKeystore(evenet.target.result)){
+          $('message').text('no right keystore');
+          return;
+        }
+        this.auth.keystore = event.target.result;
+        $('message').text('keystore has passed');
+        document.querySelector('#input-password').focuse();
+      }catch (event){
+        $('message').text('no right keystore');
+        return;
+      }
+    }
   },
 
   handlePassword: async function () {
-
+    this.auth.password = event.target.value;
   },
 
   handleLogin: async function () {
-
+    if(this.auth.accessType === 'keystore'){
+      try {
+        const privateKey = cav.klay.accounts.decrypt(this.auth.keystore, this.auth.password).privateKey;
+        this.integrateWallet(privateKey);
+      }catch (e) {
+        $('message').text('no right keystore');
+      }
+    }
   },
 
   handleLogout: async function () {
@@ -46,23 +80,40 @@ const App = {
   },
 
   checkValidKeystore: function (keystore) {
+    const parsedKeystore = JSON.parse(keystore);
+    const isValidKeystore = parsedKeystore.verson &&
+                            parsedKeystore.id &&
+                            parsedKeystore.address &&
+                            parsedKeystore.crypto;
 
+    return isValidKeystore;
   },
 
   integrateWallet: function (privateKey) {
-
+    const walletInstance = cav.klay.accounts.privateKeyToAccount(privateKey);
+    cav.klay.accounts.wallet.add(walletInstance);
+    sessionStorage.setItem('walletInstance', JSON.stringify(walletInstance));
+    this.changeUI(walletInstance);
   },
 
   reset: function () {
-
+    this.auth = {
+      keystore = '',
+      password = ''
+    };
   },
 
   changeUI: async function (walletInstance) {
-
+    $('#loginModal').modal('hide');
+    $('#login').hide();
+    $('#logout').show();
+    $('address').append('<br>' + '<p>' + 'my wallet address' + walletInstance.address + '</p>');
   },
 
   removeWallet: function () {
-
+    cav.klay.accounts.wallet.clear();
+    sessionStorage.removeItem('walletInstance');
+    this.reset();
   },
 
   showTimer: function () {

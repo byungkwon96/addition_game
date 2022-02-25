@@ -16,7 +16,55 @@
 </head>
 
 <body>
-
+  <div class="container">
+    <div class="row">
+      <div class="col-md-8 col-md-offset-2">
+        <h1 class="text-center">클레이튼(Klaytn)</h1>
+        <h3 class="text-center">Addition Game</h3>
+        <h3 class="text-center">
+          <code>
+            <button type="button"
+                    class="btn btn-info pull-right"
+                    id="login"
+                    data-toggle="modal"
+                    data-target="#loginModal">
+                    login
+            </button>
+            <button type="button"
+                    class="btn btn-info pul-right"
+                    id="logout"
+                    style="display: none"
+                    onclick="App.handleLogout()">
+                    logout
+            </button>
+          </code>
+        </h3>
+        <div class="text-center" id="address"></div>
+        <hr />
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" tabindex="-1" role="dialog" id="loginModal">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="keystore">Keystore</label>
+            <input type="file" id="keystore" onchange="App.handleImport()">
+          </div>
+          <div class="form-group">
+            <label class="keystore">password</label>
+            <input type="password" id="form-control" id="input-password" onchange="App.handlePassword()">
+            <p class="help-block" id="message"></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="submit" onclick="App.handleLogin()">Save changes</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
 </body>
 
 </html>
