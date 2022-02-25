@@ -1,10 +1,11 @@
 import Caver from "caver-js"
+import {Spinner} from 'spinner.js'
 
 const config = {
   rpcURL: 'https://api.baoba.klaytn.net:8651'
 }
 const cav = new Caver(config.rpcURL);
-
+const agContract = new cav.klay.Contract(DEPLOYED_ABI, DEPLOYED_ADDRESS);
 const App = {
 
   auth: {
@@ -14,7 +15,15 @@ const App = {
   },
 
   start: async function () {
-
+    const walletFromSession = sessionStorage.getItem('walletInstance');
+    if(walletFromSession){
+      try {
+        cav.klay.accounts.wallet.add(JSON.parse(walletFromSession));
+        this.changeUI(JSON.parse(walletFromSession));
+      } catch (e) {
+        sessionStorage.removeItem('walletInstance');
+      }
+    }
   },
 
   handleImport: async function () {
@@ -52,31 +61,82 @@ const App = {
   },
 
   handleLogout: async function () {
-
+    this.removeWallet();
+    location.reload();
   },
 
   generateNumbers: async function () {
+    var num1 = Math.floor(Math.random() * 50) + 10;
+    var num2 = Math.floor(Math.random() * 50) + 10;
+    sessionStorage.setItem('result', num1 + num2);
 
+    $('#start').hide();
+    $('#num1').text(num1);
+    $('#num2').text(num2);
+    $('#question').show();
+    document.querySelector('#answer').focus();
+    
+    this.showTimer();
   },
 
   submitAnswer: async function () {
-
+    const result = sessionStorage.getItem('result');
+    var answer = $('#answer').val();
+    if (answer === result){
+      if(confirm("get 0.1 KLAY")) {
+        if(await this.callContractBalance() >= 0.1){
+          this.receiveKlay();
+        } else {
+          alert("no klay")
+        }
+      } else {
+        alret("no klay left");
+      }
+    }
   },
 
   deposit: async function () {
-
+    var spinner = this.showSpinner();
+    const walletInstance = this.getWallet();
+    if(walletInstance){
+      if(await this.callOwner !== walletInstance.address) return;
+      else {
+        var amount = $('#amount').val();
+        if(amount){
+          agContract.methods.deposit().send({
+            from: walletInstance.address,
+            gas: '250000',
+            value: cav.utils.toPeb(amount, "KLAY")
+          })
+          .once('transactionHash', (txHash) => {
+            console.log(`txHash: ${txHash}`);
+          })
+          .once('receipt', (receipt) => {
+            console.log(`(#${receipt.blockNumber})`, receipt);
+            spinner.stop();
+            location.reload();
+          })
+          .once('error', (error) => {
+            alert(error.message);
+          });
+        }
+        return;
+      }
+    }
   },
 
   callOwner: async function () {
-
+    return await agContract.methods.owner().call();
   },
 
   callContractBalance: async function () {
-
+    return await agContract.methods.getBalance().call();
   },
 
   getWallet: function () {
-
+    if(cav.klay.accounts.wallet.length){
+      return cav.klay.accounts.wallet[0];
+    }
   },
 
   checkValidKeystore: function (keystore) {
@@ -107,7 +167,13 @@ const App = {
     $('#loginModal').modal('hide');
     $('#login').hide();
     $('#logout').show();
-    $('address').append('<br>' + '<p>' + 'my wallet address' + walletInstance.address + '</p>');
+    $('#game').show();
+    $('#address').append('<br>' + '<p>' + 'my wallet address' + walletInstance.address + '</p>');
+    $('#contractBalance').append('<br>' + '<p>' + 'my wallet address' + cav.utils.fromPeb(await this.callContractBalance(), "KLAY") + ' KLAY' + '</p>');
+
+    if(await this.callOwner() === walletInstance.address){
+      $('#owner').show();
+    }
   },
 
   removeWallet: function () {
@@ -117,15 +183,47 @@ const App = {
   },
 
   showTimer: function () {
+    var seconds = 3;
+    $('#timer').text(seconds);
 
+    var interval = setInterval(() => {
+      $('#timer').text(--seconds);
+      if(seconds <= 0){
+        $('#timer').text('');
+        $('#answer').text('');
+        $('question').text(seconds);
+        $('#start').show();
+        clearInterval(interval);
+      }
+    }, 1000)
   },
 
   showSpinner: function () {
-
+    var target = document.getElementById("spin");
+    return new Spinner(opts).spin(target);
   },
 
   receiveKlay: function () {
+    var spinner = this.showSpinner();
+    const walletInstance = this.getWallet();
 
+    if(!walletInstance) return;
+
+    agContract.methods.transfer(cav.utils.toPeb("0.1", "KLAY")).send({
+      from: walletInstance.address,
+      gas: '250000',
+    }).then(function (receipt) {
+      if(receipt.status) {
+        spinner.stop();
+        alert("0.1KLAY" + walletInstance.address + "succesfully sent");
+        $('#transaction').html("");
+        return agContract.methods.getBalance().call()
+          .then(function (balance) {
+            $('#contractBalance').html("");
+            $('#contractBalance').append("hello");
+          })
+      }
+    })
   }
 };
 
